@@ -1,0 +1,69 @@
+-- Create enum type for roles
+CREATE TYPE role_type AS ENUM ('ADMIN', 'MANAGER', 'EMPLOYEE');
+
+-- Stores table
+CREATE TABLE stores (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name TEXT NOT NULL,
+    address TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Cabins table
+CREATE TABLE cabins (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    number TEXT NOT NULL,
+    store_id UUID REFERENCES stores(id) ON DELETE CASCADE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Teams table
+CREATE TABLE teams (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    store_id UUID UNIQUE REFERENCES stores(id) ON DELETE CASCADE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Users table
+CREATE TABLE users (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    first_name TEXT NOT NULL,
+    last_name TEXT NOT NULL,
+    email TEXT UNIQUE,
+    role role_type DEFAULT 'EMPLOYEE',
+    contract_type TEXT,
+    school_day_hours FLOAT,
+    weekly_hours FLOAT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Team-User junction table
+CREATE TABLE team_members (
+    team_id UUID REFERENCES teams(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    PRIMARY KEY (team_id, user_id)
+);
+
+-- Shifts table
+CREATE TABLE shifts (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    date DATE NOT NULL,
+    morning_start TIMESTAMP,
+    morning_end TIMESTAMP,
+    afternoon_start TIMESTAMP,
+    afternoon_end TIMESTAMP,
+    is_school_day BOOLEAN DEFAULT FALSE,
+    is_absent BOOLEAN DEFAULT FALSE,
+    cabin_id UUID REFERENCES cabins(id),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Indexes for performance
+CREATE INDEX idx_shifts_date ON shifts(date);
+CREATE INDEX idx_shifts_user_id ON shifts(user_id);
