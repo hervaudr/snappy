@@ -16,6 +16,7 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const formData = new FormData(e.currentTarget)
+    console.log('FormData', formData.get('email'))
     const credentials: LoginCredentials = {
       email: formData.get('email') as string,
       password: formData.get('password') as string
@@ -35,6 +36,7 @@ export default function LoginPage() {
             <label className="block text-sm font-medium">Email</label>
             <Input
               type="email"
+              name='email'
               className="mt-1 block w-full rounded-md border border-gray-300 p-2"
               required
             />
@@ -43,6 +45,7 @@ export default function LoginPage() {
             <label className="block text-sm font-medium">Mot de passe</label>
             <Input
               type="password"
+              name='password'
               className="mt-1 block w-full rounded-md border border-gray-300 p-2"
               required
             />
