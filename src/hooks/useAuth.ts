@@ -1,27 +1,40 @@
-import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase/auth'
-import { useRouter } from 'next/navigation'
+import { useState } from 'react'
+import type { LoginCredentials, User } from '@/types/auth'
 
 export function useAuth() {
-  const [user, setUser] = useState(null)
-  const router = useRouter()
+  const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (event === 'SIGNED_IN') {
-          setUser(session?.user ?? null)
-        } else if (event === 'SIGNED_OUT') {
-          setUser(null)
-          router.push('/login')
-        }
-      }
-    )
-
-    return () => {
-      authListener.subscription.unsubscribe()
+  const login = async (credentials: LoginCredentials) => {
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(credentials)
+      })
+      
+      if (!res.ok) throw new Error('Login failed')
+      
+      const data = await res.json()
+      localStorage.setItem('token', data.token)
+      setUser(data.user)
+      return data.user
+    } catch (err) {
+      setError('Login failed')
+      console.error('Error : ', err)
+      return null
+    } finally {
+      setLoading(false)
     }
-  }, [router])
+  }
 
-  return { user }
+  const logout = () => {
+    localStorage.removeItem('token')
+    setUser(null)
+  }
+
+  return { user, login, logout, loading, error }
 }
